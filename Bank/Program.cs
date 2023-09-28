@@ -10,7 +10,8 @@ namespace Bank
     {
         static void Main(string[] args)
         {
-
+            Console.CursorVisible = false;
+            Console.Title = "Sber";
             string[] names = new string[]
             {
                 "Иван", "Петр", "Алексей", "Дмитрий", "Сергей", "Андрей", "Николай", "Александр", "Михаил", "Владимир",
