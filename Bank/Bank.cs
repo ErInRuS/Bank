@@ -38,7 +38,7 @@ namespace Bank
     }
     public class Bank
     {
-        private string[] menuList = { "Зарегестрироватся", "Авторизироватся", "Кабинет", "Список пользователей" };
+        private string[] menuList = { "Зарегестрироватся", "Авторизироватся", "Кабинет", "Список пользователей", "Сгенерировать пользователей" };
         private int select = 0;
         private int id = 0;
         private int actualId = 0;
@@ -47,10 +47,11 @@ namespace Bank
 
         private ConsoleColor colorConsole = ConsoleColor.Green;
         private ConsoleColor colorSelect = ConsoleColor.Yellow;
-        public void MainMenu()
+        public void MainMenu(string[] x, string[] y, string[] z)
         {
             SiginUp();
-            ConsoleKeyInfo key = Console.ReadKey();
+            Console.Clear();
+            ConsoleKeyInfo key = Press();
             while (key.Key != ConsoleKey.Escape)
             {
                 User actualUser = Users[actualId];
@@ -66,6 +67,13 @@ namespace Bank
                         Console.ForegroundColor = colorConsole;
                         Console.Write(">");
                         Console.ForegroundColor = colorSelect;
+                        Console.WriteLine(menuList[i]);
+                        Console.ResetColor();
+                    }
+                    else if (i == 4)
+                    {
+                        Console.Write(" ");
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.WriteLine(menuList[i]);
                         Console.ResetColor();
                     }
@@ -107,14 +115,20 @@ namespace Bank
                             case 0:
                                 SiginUp();
                                 break;
+                            case 1:
+                                Authorization();
+                                break;
                             case 2:
                                 room();
                                 break;
                             case 3:
-                                showUsers();
+                                ShowUsers();
+                                break;
+                            case 4:
+                                GenerateUsers(x,y,z);
                                 break;
                             default:
-
+                                Press();
                                 break;
                         }
                         break;
@@ -140,12 +154,12 @@ namespace Bank
 
             Users.Add(usr);
             Console.WriteLine($"{usr.LastName} {usr.Name} {usr.SubName} , вы успешно зарегестрировались!");
-            Console.WriteLine(usr.Money);
             Press();
             id++;
         }
         public int[] Authorization()
         {
+            Console.Clear();
             Console.Write("Введите имя: ");
             string name = Console.ReadLine();
             Console.Write("Введите пароль: ");
@@ -169,13 +183,14 @@ namespace Bank
             else
             {
                 Console.WriteLine("Профиля не существует!");
+                temporaryId = actualId;
             }
             actualId = temporaryId;
             Press();
             return new int[] { 1, temporaryId };
 
         }
-        public void showUsers()
+        public void ShowUsers()
         {
             Console.Clear();
 
@@ -199,13 +214,16 @@ namespace Bank
         }
         void room()
         {
+            Console.Clear();
+            User actualUser = Users[actualId];
+            Console.WriteLine($"ФИО: {actualUser.SubName} {actualUser.Name} {actualUser.LastName}");
+            Console.WriteLine(string.Format("Сосотяние: {0:N2}р", actualUser.Money));
             int selectID = 0;
-            string[] operations = { "Пополнить баланс", "Перевести" };
-            ConsoleKeyInfo key = Console.ReadKey();
+            string[] operations = { "Перевести", "Пополнить баланс" };
+            ConsoleKeyInfo key = Press();
             while (key.Key != ConsoleKey.Escape)
             {
                 Console.Clear();
-                User actualUser = Users[actualId];
                 Console.WriteLine($"ФИО: {actualUser.SubName} {actualUser.Name} {actualUser.LastName}");
                 Console.WriteLine(string.Format("Сосотяние: {0:N2}р", actualUser.Money));
 
@@ -216,13 +234,13 @@ namespace Bank
                         Console.ForegroundColor = colorConsole;
                         Console.Write(">");
                         Console.ForegroundColor = colorSelect;
-                        Console.WriteLine(menuList[i]);
+                        Console.WriteLine(operations[i]);
                         Console.ResetColor();
                     }
                     else
                     {
                         Console.Write(" ");
-                        Console.WriteLine(menuList[i]);
+                        Console.WriteLine(operations[i]);
                     }
                 }
 
@@ -255,10 +273,13 @@ namespace Bank
                         switch (selectID)
                         {
                             case 0:
-                                SiginUp();
+                                pay();
+                                break;
+                            case 1:
+                                BalanceUp();
                                 break;
                             default:
-
+                                Press();
                                 break;
                         }
                         break;
@@ -269,21 +290,85 @@ namespace Bank
 
             }
         }
-        void pay(int id1, int id2)
+        void BalanceUp()
         {
             Console.WriteLine("Введите сумму: ");
-            double num = double.Parse(Console.ReadLine());
-            double balance1, balance2;
-            User user1, user2 = null;
+            double sum = double.Parse(Console.ReadLine());
+            User usr = null;
             foreach (var user in Users)
             {
-                if (user.Id == id1)
-                    user1 = user;
-                if (user.Id == id2)
-                    user2 = user;
+                if (user.Id == actualId)
+                {
+                    usr = user;
+                }
+            }
+            if (sum < 0)
+            {
+                Console.WriteLine("Ошибка ввода!");
+                Console.WriteLine("Вы ввели отрицательное значение");
+                Press();
+
+            } else
+            {
+                usr.PayMoney = sum;
             }
         }
+        void pay()
+        {
+            Console.WriteLine("Введите ID зачесления: ");
+            double idOutPay = double.Parse(Console.ReadLine());
+            Console.WriteLine("Введите сумму: ");
+            double summ = double.Parse(Console.ReadLine());
+            User user1 = null;
+            User user2 = null;
 
+            foreach (var user in Users)
+            {
+                if(user.Id == idOutPay)
+                {
+                    user2 = user;
+                } else if (user.Id == actualId)
+                {
+                    user1 = user;
+                }
+            }
+            if(summ < 0)
+            {
+                Console.WriteLine("Ошибка ввода!");
+                Console.WriteLine("Вы ввели отрицательное значение");
+                Press();
+                return;
+            } else if(user1.Money - summ < 0)
+            {
+                Console.WriteLine("У вас недостаточно средств!");
+                Press();
+                return;
+            } else
+            {
+                user1.PayMoney = -summ;
+                user2.PayMoney = summ;
+            }
+        }
+        void GenerateUsers(string[] name, string[] subName, string[] lastName)
+        {
+            Console.WriteLine("Введите количество: ");
+            int num = int.Parse(Console.ReadLine());
+            Random rand = new Random();
+            for (int i = 0; i < num; i++)
+            {
+                User usr = new User();
+                usr.Id = id;
+                usr.Name = name[rand.Next(0,name.Length)];
+                usr.SubName = subName[rand.Next(0, subName.Length)];
+                usr.LastName = lastName[rand.Next(0, lastName.Length)];
+                usr.PayMoney = rand.Next(1,1000000) + rand.NextDouble();
+                Users.Add(usr);
+                id++;
+            }
+            Console.ForegroundColor = colorSelect;
+            Console.WriteLine("Успешно!");
+            Console.ResetColor();
+        }
 
     }
 }
